@@ -9,34 +9,42 @@
 #include <math.h>
 #include <stdbool.h>
 #include <iostream>
+#include <vector>
+#include <iomanip>
+#include <utility>
 
+namespace nncuda 
+{
+class Array {
+public:
+	Array();
+	Array(std::pair<uint32_t, uint32_t> shape, bool random);
+	Array(uint32_t x, uint32_t y, bool random);
+	Array(std::vector<std::vector<float>> matrix);
+	void print() const;
+	void T();
+	void resize(std::pair<uint32_t, uint32_t> shape);
+	void resize(uint32_t x, uint32_t y);
+	std::pair<uint32_t, uint32_t> shape() const;
+	uint32_t x() const;
+	uint32_t y() const;
+	void dot(Array A, Array B);
+	void add(Array A);
+	float *data() ;
+	void copy(Array A);
+	void ReLU(Array A);
+	void softmax(Array A);
+	~Array();
+private:
+	uint32_t _x, _y, _size;
+	float *_data;
+};
 
-typedef struct {
-	uint32_t x;
-	uint32_t y;
-	uint32_t size;
-	float *data;
-} nncuda_array;
+class Network {
+public:
+	Network(Array data, Array expected);
+};
+}
 
-typedef struct {
-	nncuda_array *input;
-	nncuda_array *labels;
-	nncuda_array *W[2];
-	nncuda_array *b[2];
-	nncuda_array *Z[2];
-	nncuda_array *A[2];
-	nncuda_array *dZ[2];
-} nncuda_network;
-
-void nncuda_print_array(nncuda_array *array);
-void nncuda_print_array_transpose(nncuda_array *array);
-nncuda_network *nncuda_init(nncuda_array *input, nncuda_array *labels);
-void nncuda_forward_prop(nncuda_network *network);
-void nncuda_back_prop(nncuda_network *network);
-void nncuda_free_array(nncuda_array *array);
-void nncuda_update_layers(float alpha);
-nncuda_array *nncuda_zero_array(uint32_t x, uint32_t y);
-nncuda_array *nncuda_rand_array(uint32_t x, uint32_t y);
-bool nncuda_realloc_array(nncuda_array *array, uint32_t x, uint32_t y);
 
 #endif //NNCUDA_CUH

@@ -1,13 +1,12 @@
 // Include C++ header files.
 #include <iostream>
 #include <byteswap.h>
-#include <vector>
 
 // Include local CUDA header files.
 #include "include/nncuda.cuh"
 
 
-/*
+
 nncuda_array *load_img_data(char *img_file) {
 	union {
 		uint32_t data[4];
@@ -65,9 +64,10 @@ nncuda_array *load_lbl_data(char *lbl_file) {
 	free(tmp);
 	return output;
 }
-*/
-
 
 int main() {
-	srand(time(NULL));
+	nncuda_array *labels = load_lbl_data("samples/train_labels");
+	nncuda_array *input = load_img_data("samples/train_images");
+	nncuda_network *network = nncuda_init(input, labels);
+	nncuda_forward_prop(network);
 }

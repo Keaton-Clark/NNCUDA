@@ -51,7 +51,7 @@ INC_DIR = include
 EXE = a.out
 
 # Object files:
-OBJS = $(OBJ_DIR)/main.o $(OBJ_DIR)/nncuda.o #$(OBJ_DIR)/cuda_kernel.o
+OBJS = $(OBJ_DIR)/main.o $(OBJ_DIR)/nncuda.o #$(OBJ_DIR)/nncuda.o
 
 ##########################################################
 
