@@ -2,13 +2,13 @@
 #include <iostream>
 #include <byteswap.h>
 #include <vector>
+#include <fstream>
 
 // Include local CUDA header files.
 #include "include/nncuda.cuh"
 
 
-/*
-nncuda_array *load_img_data(char *img_file) {
+nncuda::Array load_img_data(char *img_file) {
 	union {
 		uint32_t data[4];
 		struct {
@@ -22,24 +22,25 @@ nncuda_array *load_img_data(char *img_file) {
 	if (!fptr) exit(EXIT_FAILURE);
 	fread(&img_head, 16, 1, fptr);
 	for (int i = 0; i < 4; i++) img_head.data[i] = bswap_32(img_head.data[i]);
-	nncuda_array *output = (nncuda_array*)malloc(sizeof(nncuda_array));
-	output->x = 2000;//img_head.meta.num_imgs;
-	output->y = img_head.meta.num_cols * img_head.meta.num_rows;
-	output->size = output->x * output->y * sizeof(float);
-	output->data = (float*)malloc(output->x * output->y * sizeof(float*));
-	uint8_t *tmp = (uint8_t*)malloc(output->y * sizeof(uint8_t));
-	for (int i = 0; i < output->x; i++) {
-		fread(tmp, 1, output->y, fptr);
-		for (int n = 0; n < output->y; n++) {
-			output->data[n * output->x + i] = (float)(tmp[n]);
+	int x = 2000;//img_head.meta.num_imgs;
+	int y = img_head.meta.num_cols * img_head.meta.num_rows;
+	int size = x * y * sizeof(float);
+	float *data = (float*)malloc(x * y * sizeof(float*));
+	uint8_t *tmp = (uint8_t*)malloc(y * sizeof(uint8_t));
+	for (int i = 0; i < x; i++) {
+		fread(tmp, 1, y, fptr);
+		for (int n = 0; n < y; n++) {
+			data[n * x + i] = (float)(tmp[n]) / 784;
 		}
 	}
 	fclose(fptr);
 	free(tmp);
+	auto output = nncuda::Array(data, x, y);
+	free(data);
 	return output;
 }
 
-nncuda_array *load_lbl_data(char *lbl_file) {
+nncuda::Array load_lbl_data(char *lbl_file) {
 	union {
 		uint32_t data[2];
 		struct {
@@ -51,23 +52,29 @@ nncuda_array *load_lbl_data(char *lbl_file) {
 	if (!fptr) exit(EXIT_FAILURE);
 	fread(&lbl_head, 8, 1, fptr);
 	for (int i = 0; i < 2; i++) lbl_head.data[i] = bswap_32(lbl_head.data[i]);
-	nncuda_array *output = (nncuda_array*)malloc(sizeof(nncuda_array));
-	output->x = 2000;
-	output->y = 10;
-	output->size = output->x * output->y * sizeof(float);
-	output->data = (float*)calloc(output->x * output->y, sizeof(float));
-	uint8_t *tmp = (uint8_t*)malloc(output->x * output->x);
-	fread(tmp, 1, output->x, fptr);
-	for (int i = 0; i < output->x; i++) {
-		output->data[output->x * tmp[i] + i] = 1;
+	int x = 2000;
+	int y = 10;
+	int size = x * y * sizeof(float);
+	float *data = (float*)calloc(x * y, sizeof(float));
+	uint8_t *tmp = (uint8_t*)malloc(x * x);
+	fread(tmp, 1, x, fptr);
+	for (int i = 0; i < x; i++) {
+		data[x * tmp[i] + i] = 1;
 	}
 	fclose(fptr);
 	free(tmp);
+	nncuda::Array output(data, x, y);
+	free(data);
 	return output;
 }
-*/
-
 
 int main() {
-	srand(time(NULL));
+	nncuda::Network network(load_img_data("samples/train_images"), load_lbl_data("samples/train_labels"), 0.1);
+	for (int i = 0; i < 10000; i++) {
+		network.forward_prop();
+		network.back_prop();
+		network.update();
+		if (i % 100 == 0)
+			std::cout << network.accuracy() << std::endl;
+	}
 }

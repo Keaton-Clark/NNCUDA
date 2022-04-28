@@ -21,6 +21,7 @@ public:
 	Array(std::pair<uint32_t, uint32_t> shape, bool random);
 	Array(uint32_t x, uint32_t y, bool random);
 	Array(std::vector<std::vector<float>> matrix);
+	Array(float *matrix, uint32_t x, uint32_t y);
 	void print() const;
 	void T();
 	void resize(std::pair<uint32_t, uint32_t> shape);
@@ -30,11 +31,17 @@ public:
 	uint32_t y() const;
 	void dot(Array A, Array B);
 	void add(Array A);
-	float *data() ;
+	void sub(Array A);
+	void mult(float A);
+	void mult(Array A);
+	void sum(Array A);
+	float *data();
+	uint32_t size() const;
 	void copy(Array A);
 	void ReLU(Array A);
+	void dReLU(Array A);
 	void softmax(Array A);
-	~Array();
+	float accuracy();
 private:
 	uint32_t _x, _y, _size;
 	float *_data;
@@ -42,7 +49,23 @@ private:
 
 class Network {
 public:
-	Network(Array data, Array expected);
+	Network(Array input, Array expected, float alpha);
+	void forward_prop();
+	void back_prop();
+	void update();
+	float accuracy();
+private:
+	Array *W;
+	Array *b;
+	Array *Z;
+	Array *A;
+	Array *dZ;
+	Array *dW;
+	Array *db;
+	Array _input;
+	Array _expected;
+	float _alpha;
+	Array tmp;
 };
 }
 
